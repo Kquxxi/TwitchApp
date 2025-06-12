@@ -1,0 +1,15 @@
+<html>
+<head><title>Raport klipów</title></head>
+<body>
+<h1>Najpopularniejsze klipy (ostatnie 24h)</h1>
+<ul>
+    {% for clip in clips %}
+        <li>
+            <strong>{{ clip.creator }}</strong> - 
+            <a href="{{ clip.url }}">{{ clip.url }}</a> 
+            ({{ clip.views }} wyświetleń)
+        </li>
+    {% endfor %}
+</ul>
+</body>
+</html>
