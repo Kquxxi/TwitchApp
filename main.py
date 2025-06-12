@@ -1,10 +1,10 @@
 import requests
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 load_dotenv('config.env')
 
 import os
 import json
-from datetime import datetime, timedelta
 from jinja2 import Environment, FileSystemLoader
 
 load_dotenv()
@@ -21,7 +21,7 @@ def get_token():
     }
     res = requests.post(url, params=params)
     response_json = res.json()
-    print("DEBUG RESPONSE:", response_json)  
+    #print("DEBUG RESPONSE:", response_json)  
     return response_json['access_token']
 
 # Pobierz ID użytkownika
@@ -41,10 +41,26 @@ def get_clips(user_id, token):
         'Client-ID': client_id,
         'Authorization': f'Bearer {token}'
     }
-    started_at = (datetime.utcnow() - timedelta(days=1)).isoformat() + "Z"
-    url = f"https://api.twitch.tv/helix/clips?broadcaster_id={user_id}&started_at={started_at}"
-    res = requests.get(url, headers=headers)
-    return res.json()['data']
+    # 1. Obiekt daty dokładnie 24h temu (UTC)
+    one_day_ago = datetime.now(timezone.utc) - timedelta(days=1)
+    # 2. Zamiana na ciąg w formacie YYYY-MM-DDTHH:MM:SSZ
+    started_at  = one_day_ago.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    url = (
+        f"https://api.twitch.tv/helix/clips"
+        f"?broadcaster_id={user_id}"
+        f"&started_at={started_at}"
+        f"&first=100"
+    )
+
+    res = requests.get(url, headers=headers).json()
+    if 'data' not in res:
+        print("Błąd pobierania klipów:", res)
+        return []
+
+    # Zwracamy tylko klipy z min. 30 wyświetleń
+    return [c for c in res['data'] if c.get('view_count', 0) >= 30]
+
 
 # Generuj raport HTML
 def generate_report(clips):
@@ -54,11 +70,18 @@ def generate_report(clips):
     with open('raport.html', 'w', encoding='utf-8') as f:
         f.write(html_output)
 
+def get_games_info(game_ids, token):
+    headers = {'Client-ID': client_id, 'Authorization': f'Bearer {token}'}
+    params  = [('id', gid) for gid in game_ids]
+    res     = requests.get("https://api.twitch.tv/helix/games", headers=headers, params=params).json()
+    return {g['id']: g['name'] for g in res.get('data', [])}
+
+
 if __name__ == "__main__":
     token = get_token()
 
-    with open('tworcy.json') as f:
-        creators = json.load(f)['tworcy']
+    with open('streamerzy.json', encoding='utf-8') as f:
+      creators = [s['login'] for s in json.load(f)['streamerzy']]
 
     all_clips = []
     for creator in creators:
@@ -66,14 +89,25 @@ if __name__ == "__main__":
         if user_id:
             clips = get_clips(user_id, token)
             for clip in clips:
-                all_clips.append({
-                    'creator': creator,
-                    'url': clip['url'],
-                    'views': clip['view_count']
+              all_clips.append({
+                  'broadcaster': clip.get('broadcaster_name', '—'),
+                  'title':   clip.get('title', '—'),
+                  'url':     clip['url'],
+                  'views':   clip['view_count'],
+                  'game_id': clip.get('game_id', '')
                 })
 
-    sorted_clips = sorted(all_clips, key=lambda x: x['views'], reverse=True)
+# 1) zbierz unikalne ID gier
+game_ids = list({c['game_id'] for c in all_clips if c['game_id']})
+# 2) pobierz mapę id → nazwa
+game_map = get_games_info(game_ids, token)
+# 3) dodaj kategorię do każdego klipu
+for c in all_clips:
+    c['category'] = game_map.get(c['game_id'], '—')
 
-    generate_report(sorted_clips)
+# teraz sortuj i generuj raport
+sorted_clips = sorted(all_clips, key=lambda x: x['views'], reverse=True)
+generate_report(sorted_clips)
 
-    print("Raport został wygenerowany do pliku raport.html!")
+
+print("Raport został wygenerowany do pliku raport.html!")

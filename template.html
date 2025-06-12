@@ -1,15 +1,15 @@
 <html>
-<head><title>Raport klipów</title></head>
+<head><meta charset="utf-8"><title>Raport klipów polskich streamerów</title></head>
 <body>
-<h1>Najpopularniejsze klipy (ostatnie 24h)</h1>
-<ul>
+  <h1>Najpopularniejsze klipy polskich streamerów (ostatnie 24h)</h1>
+  <ul>
     {% for clip in clips %}
-        <li>
-            <strong>{{ clip.creator }}</strong> - 
-            <a href="{{ clip.url }}">{{ clip.url }}</a> 
-            ({{ clip.views }} wyświetleń)
-        </li>
+    <li>
+      <strong>{{ clip.broadcaster }}</strong> –
+      <a href="{{ clip.url }}" target="_blank">{{ clip.title }}</a>
+      <em>({{ clip.category }})</em> – {{ clip.views }} wyświetleń
+    </li>
     {% endfor %}
-</ul>
+  </ul>
 </body>
 </html>
