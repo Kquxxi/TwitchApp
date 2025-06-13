@@ -94,7 +94,8 @@ if __name__ == "__main__":
                   'title':   clip.get('title', '—'),
                   'url':     clip['url'],
                   'views':   clip['view_count'],
-                  'game_id': clip.get('game_id', '')
+                  'game_id': clip.get('game_id', ''),
+                  'created_at':  clip.get('created_at')
                 })
 
 # 1) zbierz unikalne ID gier
@@ -104,6 +105,23 @@ game_map = get_games_info(game_ids, token)
 # 3) dodaj kategorię do każdego klipu
 for c in all_clips:
     c['category'] = game_map.get(c['game_id'], '—')
+
+now = datetime.now(timezone.utc)
+for c in all_clips:
+    # parsujemy ISO8601: usuwamy Z i dodajemy +00:00, żeby fromisoformat przyjął
+    created = datetime.fromisoformat(c['created_at'].replace('Z', '+00:00'))
+    delta   = now - created
+
+    if delta.days >= 1:
+        rel = f"{delta.days}d ago"
+    elif delta.seconds >= 3600:
+        rel = f"{delta.seconds // 3600}h ago"
+    elif delta.seconds >= 60:
+        rel = f"{delta.seconds // 60}m ago"
+    else:
+        rel = f"{delta.seconds}s ago"
+
+    c['relative_time'] = rel
 
 # teraz sortuj i generuj raport
 sorted_clips = sorted(all_clips, key=lambda x: x['views'], reverse=True)

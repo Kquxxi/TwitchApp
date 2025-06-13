@@ -5,10 +5,12 @@
   <ul>
     {% for clip in clips %}
     <li>
-      <strong>{{ clip.broadcaster }}</strong> –
-      <a href="{{ clip.url }}" target="_blank">{{ clip.title }}</a>
-      <em>({{ clip.category }})</em> – {{ clip.views }} wyświetleń
-    </li>
+  <strong>{{ clip.broadcaster }}</strong> –
+  <a href="{{ clip.url }}" target="_blank">{{ clip.title }}</a>
+  <em>({{ clip.category }})</em> – 
+  {{ clip.views }} wyświetleń 
+  <small>({{ clip.relative_time }})</small>
+</li>
     {% endfor %}
   </ul>
 </body>
