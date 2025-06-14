@@ -74,10 +74,10 @@ def get_clips(user_id, token):
 
 
 # Generuj raport HTML
-def generate_report(clips):
+def generate_report(clips,stats):
     env = Environment(loader=FileSystemLoader('.'))
     template = env.get_template('template.html')
-    html_output = template.render(clips=clips)
+    html_output = template.render(clips=clips, stats=stats)
     with open('raport.html', 'w', encoding='utf-8') as f:
         f.write(html_output)
 
@@ -95,10 +95,10 @@ if __name__ == "__main__":
       streamers = json.load(f)['streamerzy']
     print(f"[DEBUG] Załadowano {len(streamers)} streamerów")
 
-max_workers = 3  # liczba wątków równoległych (dostosuj do swojego łącza/API limits)
+max_workers = min(5, len(streamers))  # liczba wątków równoległych (dostosuj do swojego łącza/API limits)
 all_clips = []
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
     future_to_streamer = {
         executor.submit(get_clips, s['id'], token): s
         for s in streamers
@@ -150,9 +150,28 @@ for c in all_clips:
 
     c['relative_time'] = rel
 
-# teraz sortuj i generuj raport
+# teraz sortuj, oblicz statystyki i generuj raport
 sorted_clips = sorted(all_clips, key=lambda x: x['views'], reverse=True)
-generate_report(sorted_clips)
 
+# Obliczamy statystyki (total_clips, top3 kategorie, top3 streamerzy, avg/median)
+total_clips = len(sorted_clips)
+from collections import Counter
+cat_counts       = Counter(c['category'] for c in sorted_clips)
+top3_categories  = cat_counts.most_common(3)
+broad_counts     = Counter(c['broadcaster'] for c in sorted_clips)
+top3_streamers   = broad_counts.most_common(3)
+import statistics
+views            = [c['views'] for c in sorted_clips]
+avg_views        = statistics.mean(views) if views else 0
+median_views     = statistics.median(views) if views else 0
+stats = {
+    'total_clips':    total_clips,
+    'top_categories': top3_categories,
+    'top_streamers':  top3_streamers,
+    'avg_views':      avg_views,
+    'median_views':   median_views,
+}
+
+generate_report(sorted_clips, stats)
 
 print("Raport został wygenerowany do pliku raport.html!")
