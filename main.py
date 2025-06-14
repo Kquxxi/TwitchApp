@@ -2,10 +2,20 @@ import requests
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 load_dotenv('config.env')
-
+import concurrent.futures
+from concurrent.futures import as_completed
 import os
 import json
 from jinja2 import Environment, FileSystemLoader
+import time
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+session = requests.Session()
+retries = Retry(total=3,
+                backoff_factor=1,        # 1s, 2s, 4s przerwy
+                status_forcelist=[429, 500, 502, 503, 504])
+session.mount('https://', HTTPAdapter(max_retries=retries))
 
 load_dotenv()
 
@@ -53,7 +63,8 @@ def get_clips(user_id, token):
         f"&first=100"
     )
 
-    res = requests.get(url, headers=headers).json()
+    time.sleep(0.1)
+    res = session.get(url, headers=headers).json()
     if 'data' not in res:
         print("Błąd pobierania klipów:", res)
         return []
@@ -81,22 +92,38 @@ if __name__ == "__main__":
     token = get_token()
 
     with open('streamerzy.json', encoding='utf-8') as f:
-      creators = [s['login'] for s in json.load(f)['streamerzy']]
+      streamers = json.load(f)['streamerzy']
+    print(f"[DEBUG] Załadowano {len(streamers)} streamerów")
 
-    all_clips = []
-    for creator in creators:
-        user_id = get_user_id(creator, token)
-        if user_id:
-            clips = get_clips(user_id, token)
-            for clip in clips:
-              all_clips.append({
-                  'broadcaster': clip.get('broadcaster_name', '—'),
-                  'title':   clip.get('title', '—'),
-                  'url':     clip['url'],
-                  'views':   clip['view_count'],
-                  'game_id': clip.get('game_id', ''),
-                  'created_at':  clip.get('created_at')
-                })
+max_workers = 3  # liczba wątków równoległych (dostosuj do swojego łącza/API limits)
+all_clips = []
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+    future_to_streamer = {
+        executor.submit(get_clips, s['id'], token): s
+        for s in streamers
+    }
+
+    for future in as_completed(future_to_streamer):
+        s = future_to_streamer[future]
+        try:
+            clips = future.result()
+        except Exception as e:
+            print(f"[ERROR] Błąd dla {s['display_name']}: {e}")
+            continue
+
+        print(f"[DEBUG] → {len(clips)} klipów dla {s['display_name']}")
+        for clip in clips:
+            all_clips.append({
+                'broadcaster':  s['display_name'],
+                'title':        clip.get('title', '—'),
+                'url':          clip['url'],
+                'views':        clip['view_count'],
+                'game_id':      clip.get('game_id', ''),
+                'created_at':   clip.get('created_at')
+            })
+
+print(f"[DEBUG] Razem wyfiltrowanych klipów: {len(all_clips)}")
 
 # 1) zbierz unikalne ID gier
 game_ids = list({c['game_id'] for c in all_clips if c['game_id']})
