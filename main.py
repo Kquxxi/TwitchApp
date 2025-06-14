@@ -162,14 +162,12 @@ broad_counts     = Counter(c['broadcaster'] for c in sorted_clips)
 top3_streamers   = broad_counts.most_common(3)
 import statistics
 views            = [c['views'] for c in sorted_clips]
-avg_views        = statistics.mean(views) if views else 0
-median_views     = statistics.median(views) if views else 0
+
 stats = {
     'total_clips':    total_clips,
     'top_categories': top3_categories,
     'top_streamers':  top3_streamers,
-    'avg_views':      avg_views,
-    'median_views':   median_views,
+    
 }
 
 generate_report(sorted_clips, stats)
