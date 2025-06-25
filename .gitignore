@@ -1,3 +1,8 @@
 config.env
 __pycache__/
 raport.html
+.env
+venv/
+*.pyc
+*.db
+.vscode/
