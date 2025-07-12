@@ -29,17 +29,12 @@ def api_update_streamers():
 
 @app.route('/api/generate-raport')
 def api_generate_raport():
-    # wywołujemy właśnie nowy generate_report.py z rootu
+    # ścieżka do Twojego skryptu
     script = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','generate_raport.py'))
-    try:
-        res = subprocess.run(
-            ['python', script],
-            capture_output=True, text=True, check=True
-        )
-        return jsonify({'message': res.stdout})
-    except CalledProcessError as e:
-        app.logger.error("generate_raport error:\n%s", e.stderr)
-        return jsonify({'error': e.stderr or str(e), 'code': e.returncode}), 500
+    # odpalenie w tle bez czekania
+    subprocess.Popen(['python', script])
+    # od razu zwracamy potwierdzenie
+    return jsonify({'message': 'Raport generowany w tle, odśwież za kilka minut'}), 202
 
 @app.route('/raport')
 def raport():

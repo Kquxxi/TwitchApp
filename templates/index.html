@@ -7,16 +7,20 @@
 </head>
 <body>
   <h1>Panel Twitch Clips</h1>
+
   <button id="btn-update">Odśwież streamerów</button>
-  <button id="btn-report">Generuj i pokaż raport</button>
+  <button id="btn-start-report">Rozpocznij generowanie raportu</button>
+  <button id="btn-load-report" style="display:none;">Pokaż/Rozładuj raport</button>
+
   <div id="status" style="margin:8px 0; color:#444;"></div>
+
   <iframe
     id="raport-frame"
     style="width:100%; height:600px; border:1px solid #ccc; display:none; margin-top:10px;"
   ></iframe>
 
   <script>
-    async function runUpdate() {
+    document.getElementById('btn-update').addEventListener('click', async () => {
       const status = document.getElementById('status');
       status.textContent = 'Odświeżanie streamerów…';
       try {
@@ -26,27 +30,33 @@
       } catch(e) {
         status.textContent = 'Błąd: ' + e;
       }
-    }
+    });
 
-    async function runReport() {
+    document.getElementById('btn-start-report').addEventListener('click', async () => {
       const status = document.getElementById('status');
-      status.textContent = 'Generowanie raportu…';
+      status.textContent = 'Uruchamianie generowania raportu…';
       try {
         const res = await fetch('/api/generate-raport');
         const obj = await res.json();
         status.textContent = obj.message || obj.error;
         if (res.ok) {
-          const iframe = document.getElementById('raport-frame');
-          iframe.src = '/raport';
-          iframe.style.display = 'block';
+          // pokazujemy przycisk do ręcznego załadowania iframe
+          document.getElementById('btn-load-report').style.display = 'inline-block';
         }
       } catch(e) {
         status.textContent = 'Błąd: ' + e;
       }
-    }
+    });
 
-    document.getElementById('btn-update').addEventListener('click', runUpdate);
-    document.getElementById('btn-report').addEventListener('click', runReport);
+    document.getElementById('btn-load-report').addEventListener('click', () => {
+      const status = document.getElementById('status');
+      status.textContent = 'Ładowanie raportu…';
+      const iframe = document.getElementById('raport-frame');
+      // cache-buster, żeby zawsze pobrało nową wersję
+      iframe.src = '/raport?ts=' + Date.now();
+      iframe.style.display = 'block';
+      iframe.onload = () => status.textContent = 'Raport załadowany';
+    });
   </script>
 </body>
 </html>
