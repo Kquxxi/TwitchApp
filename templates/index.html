@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Panel Twitch Clips</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>Panel Twitch Clips</h1>
+  <button id="btn-update">Odśwież streamerów</button>
+  <button id="btn-report">Generuj i pokaż raport</button>
+  <div id="status" style="margin:8px 0; color:#444;"></div>
+  <iframe
+    id="raport-frame"
+    style="width:100%; height:600px; border:1px solid #ccc; display:none; margin-top:10px;"
+  ></iframe>
+
+  <script>
+    async function runUpdate() {
+      const status = document.getElementById('status');
+      status.textContent = 'Odświeżanie streamerów…';
+      try {
+        const res = await fetch('/api/update-streamers');
+        const obj = await res.json();
+        status.textContent = obj.message || obj.error;
+      } catch(e) {
+        status.textContent = 'Błąd: ' + e;
+      }
+    }
+
+    async function runReport() {
+      const status = document.getElementById('status');
+      status.textContent = 'Generowanie raportu…';
+      try {
+        const res = await fetch('/api/generate-raport');
+        const obj = await res.json();
+        status.textContent = obj.message || obj.error;
+        if (res.ok) {
+          const iframe = document.getElementById('raport-frame');
+          iframe.src = '/raport';
+          iframe.style.display = 'block';
+        }
+      } catch(e) {
+        status.textContent = 'Błąd: ' + e;
+      }
+    }
+
+    document.getElementById('btn-update').addEventListener('click', runUpdate);
+    document.getElementById('btn-report').addEventListener('click', runReport);
+  </script>
+</body>
+</html>

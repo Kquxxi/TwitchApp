@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: twitch-clips-app
+    env: python
+    region: eu-central-1      # lub twoja strefa
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app.main:app --log-file -
+    envVars:
+      - key: TWITCH_CLIENT_ID
+      - key: TWITCH_CLIENT_SECRET
+
+cronJobs:
+  - name: update-streamers
+    schedule: "*/30 * * * *"    # co 30 minut
+    command: python update_streamers.py
+    envVars:
+      - key: TWITCH_CLIENT_ID
+      - key: TWITCH_CLIENT_SECRET
+
