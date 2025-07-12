@@ -29,16 +29,25 @@ def api_update_streamers():
 
 @app.route('/api/generate-raport')
 def api_generate_raport():
-    # ścieżka do Twojego skryptu
-    script = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','generate_raport.py'))
-    # odpalenie w tle bez czekania
+    report_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'raport.html'))
+    # jeśli jest stary raport, to go usuwamy
+    if os.path.exists(report_path):
+        os.remove(report_path)
+    # uruchamiamy w tle
+    script = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'generate_raport.py'))
     subprocess.Popen(['python', script])
-    # od razu zwracamy potwierdzenie
-    return jsonify({'message': 'Raport generowany w tle, odśwież za kilka minut'}), 202
+    return jsonify({'message': 'Generowanie raportu uruchomione'}), 202
 
 @app.route('/raport')
 def raport():
     return send_file(os.path.abspath('raport.html'))
+
+@app.route('/api/report-ready')
+def api_report_ready():
+    # ścieżka do raport.html w rootzie
+    report_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'raport.html'))
+    ready = os.path.exists(report_path)
+    return jsonify({'ready': ready})
 
 if __name__ == '__main__':
     app.run(debug=True)

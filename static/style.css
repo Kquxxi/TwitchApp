@@ -1,0 +1,66 @@
+:root {
+  --primary: #556cd6;
+  --primary-dark: #3f51b5;
+  --bg: #f9f9fb;
+  --text: #333;
+  --muted: #666;
+  --border: #ddd;
+  --radius: 6px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* --- Kontener całości --- */
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family: sans-serif;
+}
+
+/* --- Nagłówek --- */
+header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.buttons {
+  margin-top: 0.5rem;
+}
+.btn {
+  background-color: #556cd6;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  margin: 0 0.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn:hover {
+  background-color: #3f51b5;
+}
+
+/* --- Status --- */
+.status {
+  margin-top: 0.5rem;
+  font-style: italic;
+  color: #333;
+}
+
+/* --- Kontener raportu --- */
+.raport-container {
+  margin-top: 2rem;
+  border-top: 1px solid #ddd;
+  padding-top: 1rem;
+}
+/* Upewnij się, że Twój template raportu ma odpowiednie klasy/elementy,
+   np. nagłówki, tabele z klasą .raport-table itp. */

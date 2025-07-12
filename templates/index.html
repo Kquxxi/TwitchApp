@@ -6,57 +6,55 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <h1>Panel Twitch Clips</h1>
+  <div class="container">
+    <header>
+      <h1>Panel Twitch Clips</h1>
+      <div class="buttons">
+        <button id="btn-update" class="btn">Odśwież streamerów</button>
+        <button id="btn-report" class="btn">Generuj raport</button>
+      </div>
+      <div id="status" class="status"></div>
+    </header>
 
-  <button id="btn-update">Odśwież streamerów</button>
-  <button id="btn-start-report">Rozpocznij generowanie raportu</button>
-  <button id="btn-load-report" style="display:none;">Pokaż/Rozładuj raport</button>
-
-  <div id="status" style="margin:8px 0; color:#444;"></div>
-
-  <iframe
-    id="raport-frame"
-    style="width:100%; height:1600px; border:1px solid #ccc; display:none; margin-top:10px;"
-  ></iframe>
+    <!-- Tu wstrzykniemy raport -->
+    <main id="raport-container" class="raport-container"></main>
+  </div>
 
   <script>
-    document.getElementById('btn-update').addEventListener('click', async () => {
-      const status = document.getElementById('status');
-      status.textContent = 'Odświeżanie streamerów…';
-      try {
-        const res = await fetch('/api/update-streamers');
-        const obj = await res.json();
-        status.textContent = obj.message || obj.error;
-      } catch(e) {
-        status.textContent = 'Błąd: ' + e;
-      }
-    });
+    const statusEl = document.getElementById('status');
+    const raportEl = document.getElementById('raport-container');
 
-    document.getElementById('btn-start-report').addEventListener('click', async () => {
-      const status = document.getElementById('status');
-      status.textContent = 'Uruchamianie generowania raportu…';
+    document.getElementById('btn-update').onclick = async () => {
+      statusEl.textContent = '🔄 Odświeżanie streamerów…';
       try {
-        const res = await fetch('/api/generate-raport');
-        const obj = await res.json();
-        status.textContent = obj.message || obj.error;
-        if (res.ok) {
-          // pokazujemy przycisk do ręcznego załadowania iframe
-          document.getElementById('btn-load-report').style.display = 'inline-block';
+        let r = await fetch('/api/update-streamers');
+        let obj = await r.json();
+        statusEl.textContent = obj.message || obj.error;
+      } catch(e) {
+        statusEl.textContent = 'Błąd: ' + e;
+      }
+    };
+
+    document.getElementById('btn-report').onclick = async () => {
+      statusEl.textContent = '🕒 Rozpoczynam generowanie…';
+      // 1) uruchom generator w tle
+      await fetch('/api/generate-raport');
+      // 2) polling
+      statusEl.textContent = '🔍 Generowanie raportu…';
+      const interval = setInterval(async () => {
+        let readyRes = await fetch('/api/report-ready');
+        let { ready } = await readyRes.json();
+        if (ready) {
+          clearInterval(interval);
+          statusEl.textContent = '✅ Raport gotowy!';
+          // 3) pobierz HTML i wstaw do kontenera
+          let html = await fetch('/raport').then(r => r.text());
+          raportEl.innerHTML = html;
+          // opcjonalnie przewiń do raportu
+          raportEl.scrollIntoView({ behavior: 'smooth' });
         }
-      } catch(e) {
-        status.textContent = 'Błąd: ' + e;
-      }
-    });
-
-    document.getElementById('btn-load-report').addEventListener('click', () => {
-      const status = document.getElementById('status');
-      status.textContent = 'Ładowanie raportu…';
-      const iframe = document.getElementById('raport-frame');
-      // cache-buster, żeby zawsze pobrało nową wersję
-      iframe.src = '/raport?ts=' + Date.now();
-      iframe.style.display = 'block';
-      iframe.onload = () => status.textContent = 'Raport załadowany';
-    });
+      }, 5000);
+    };
   </script>
 </body>
 </html>
