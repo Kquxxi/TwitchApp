@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
   <meta charset="utf-8">
   <title>Panel Twitch Clips</title>
@@ -9,52 +9,126 @@
   <div class="container">
     <header>
       <h1>Panel Twitch Clips</h1>
-      <div class="buttons">
+      <div class="actions">
         <button id="btn-update" class="btn">Odśwież streamerów</button>
         <button id="btn-report" class="btn">Generuj raport</button>
       </div>
       <div id="status" class="status"></div>
     </header>
 
-    <!-- Tu wstrzykniemy raport -->
-    <main id="raport-container" class="raport-container"></main>
+    <main id="raport-container"></main>
   </div>
 
   <script>
     const statusEl = document.getElementById('status');
-    const raportEl = document.getElementById('raport-container');
+    const raportContainer = document.getElementById('raport-container');
 
-    document.getElementById('btn-update').onclick = async () => {
+    // 1) Odśwież streamerów
+    async function runUpdate() {
       statusEl.textContent = '🔄 Odświeżanie streamerów…';
       try {
-        let r = await fetch('/api/update-streamers');
-        let obj = await r.json();
+        const res = await fetch('/api/update-streamers');
+        const obj = await res.json();
         statusEl.textContent = obj.message || obj.error;
-      } catch(e) {
+      } catch (e) {
         statusEl.textContent = 'Błąd: ' + e;
       }
-    };
+    }
 
-    document.getElementById('btn-report').onclick = async () => {
+    // 2) Generowanie raportu i pollowanie gotowości
+    async function runReport() {
       statusEl.textContent = '🕒 Rozpoczynam generowanie…';
-      // 1) uruchom generator w tle
-      await fetch('/api/generate-raport');
-      // 2) polling
-      statusEl.textContent = '🔍 Generowanie raportu…';
-      const interval = setInterval(async () => {
-        let readyRes = await fetch('/api/report-ready');
-        let { ready } = await readyRes.json();
+      await fetch('/api/generate-raport');       // odpala Popen w tle
+      statusEl.textContent = '⌛ Czekam na raport…';
+      const poll = setInterval(async () => {
+        const r = await fetch('/api/report-ready');
+        const { ready } = await r.json();
         if (ready) {
-          clearInterval(interval);
+          clearInterval(poll);
           statusEl.textContent = '✅ Raport gotowy!';
-          // 3) pobierz HTML i wstaw do kontenera
-          let html = await fetch('/raport').then(r => r.text());
-          raportEl.innerHTML = html;
-          // opcjonalnie przewiń do raportu
-          raportEl.scrollIntoView({ behavior: 'smooth' });
+          loadReportFragment();
         }
       }, 5000);
-    };
+    }
+
+    // 3) Pobranie i wstrzyknięcie fragmentu raportu
+    async function loadReportFragment() {
+      const html = await fetch('/raport-fragment').then(r => r.text());
+      raportContainer.innerHTML = html;
+      initReportFiltersAndStats();  // <-- nowa funkcja
+    }
+
+    // 4) Inicjalizacja dropdownów i aplikacja filtrów
+function initReportFiltersAndStats() {
+  // 1. Toggle dropdownów
+  document.querySelectorAll('.dropdown').forEach(dd => {
+    dd.querySelector('button').addEventListener('click', () => {
+      dd.classList.toggle('open');
+    });
+  });
+
+  // 2. Pobierz wszystkie wiersze tabeli
+  const rows = Array.from(document.querySelectorAll('#report-table tbody tr'));
+
+  // 3. Funkcja robiąca filtr + live statystyki
+  function applyFiltersAndStats() {
+    // a) co ignorujemy?
+    const ignoredStreamers = new Set(
+      Array.from(document.querySelectorAll('.filter-streamer'))
+        .filter(cb => !cb.checked).map(cb => cb.value)
+    );
+    const ignoredCategories = new Set(
+      Array.from(document.querySelectorAll('.filter-category'))
+        .filter(cb => !cb.checked).map(cb => cb.value)
+    );
+
+    // b) filtrujemy i zbieramy widoczne wiersze
+    const visibleRows = [];
+    rows.forEach(row => {
+      const st = row.dataset.streamer, ct = row.dataset.category;
+      const hidden = ignoredStreamers.has(st) || ignoredCategories.has(ct);
+      row.style.display = hidden ? 'none' : '';
+      if (!hidden) visibleRows.push(row);
+    });
+
+    // c) obliczamy statystyki na podstawie visibleRows
+    const total = visibleRows.length;
+    const catCounts = {};
+    const strCounts = {};
+    visibleRows.forEach(r => {
+      catCounts[r.dataset.category] = (catCounts[r.dataset.category] || 0) + 1;
+      strCounts[r.dataset.streamer] = (strCounts[r.dataset.streamer] || 0) + 1;
+    });
+    const topCats = Object.entries(catCounts)
+      .sort((a,b) => b[1] - a[1]).slice(0,3);
+    const topStr = Object.entries(strCounts)
+      .sort((a,b) => b[1] - a[1]).slice(0,3);
+
+    // d) wstawiamy do DOM
+    document.getElementById('stats-total').textContent = total;
+    document.getElementById('stats-categories').textContent =
+      topCats.map(([c,n]) => `${c} (${n})`).join(', ');
+    document.getElementById('stats-streamers').textContent =
+      topStr.map(([s,n]) => `${s} (${n})`).join(', ');
+  }
+
+  // 4. Podłączamy przyciski „Zastosuj”
+  document.getElementById('apply-streamers').addEventListener('click', () => {
+    applyFiltersAndStats();
+    document.getElementById('dd-streamers').classList.remove('open');
+  });
+  document.getElementById('apply-categories').addEventListener('click', () => {
+    applyFiltersAndStats();
+    document.getElementById('dd-categories').classList.remove('open');
+  });
+
+  // 5. Pierwsze uruchomienie (wewnątrz init)
+  applyFiltersAndStats();
+}
+
+    // Podłączamy eventy do przycisków
+    document.getElementById('btn-update').addEventListener('click', runUpdate);
+    document.getElementById('btn-report').addEventListener('click', runReport);
   </script>
 </body>
 </html>

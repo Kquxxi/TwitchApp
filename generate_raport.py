@@ -180,4 +180,7 @@ stats = {
 
 generate_raport(sorted_clips, stats)
 
+with open('raport_data.json','w',encoding='utf-8') as f:
+    json.dump({'clips': sorted_clips, 'stats': stats}, f, ensure_ascii=False, indent=2)
+
 print("Raport został wygenerowany do pliku raport.html!")

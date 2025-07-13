@@ -1,5 +1,6 @@
 import os
 import subprocess
+import json
 from flask import Flask, render_template, jsonify, send_file
 from subprocess import CalledProcessError
 
@@ -44,10 +45,18 @@ def raport():
 
 @app.route('/api/report-ready')
 def api_report_ready():
-    # ścieżka do raport.html w rootzie
     report_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'raport.html'))
     ready = os.path.exists(report_path)
     return jsonify({'ready': ready})
+
+@app.route('/raport-fragment')
+def raport_fragment():
+    # wczytujemy JSON z bazy gotowych danych:
+    with open(os.path.join(os.path.dirname(__file__),'..','raport_data.json'), encoding='utf-8') as f:
+        data = json.load(f)
+    clips = data['clips']
+    stats = data['stats']
+    return render_template('raport_fragment.html', clips=clips, stats=stats)
 
 if __name__ == '__main__':
     app.run(debug=True)
