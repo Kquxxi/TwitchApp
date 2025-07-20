@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess
 import json
@@ -20,7 +21,7 @@ def api_update_streamers():
     script = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','update_streamers.py'))
     try:
         res = subprocess.run(
-            ['python', script],
+            [sys.executable, script],
             capture_output=True, text=True, check=True
         )
         return jsonify({'message': res.stdout})

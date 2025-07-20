@@ -1,3 +1,4 @@
+import sys
 import requests
 import os
 import json
@@ -5,7 +6,7 @@ import schedule
 import time
 from datetime import datetime
 from dotenv import load_dotenv
-
+sys.stdout.reconfigure(encoding='utf-8')
 load_dotenv('config.env')
 CLIENT_ID     = os.getenv("TWITCH_CLIENT_ID")
 CLIENT_SECRET = os.getenv("TWITCH_CLIENT_SECRET")

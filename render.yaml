@@ -7,14 +7,14 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app.main:app --log-file -
     envVars:
-      - key: TWITCH_CLIENT_ID
-      - key: TWITCH_CLIENT_SECRET
+      - key: dbyhzaj41rmi10ftewy1sg2oux0bbs
+      - key: yqmxhf241lbv9yoymtfkjyhuz17yxf
 
 cronJobs:
   - name: update-streamers
     schedule: "*/30 * * * *"    # co 30 minut
     command: python update_streamers.py
     envVars:
-      - key: TWITCH_CLIENT_ID
-      - key: TWITCH_CLIENT_SECRET
+      - key: dbyhzaj41rmi10ftewy1sg2oux0bbs
+      - key: yqmxhf241lbv9yoymtfkjyhuz17yxf
 
