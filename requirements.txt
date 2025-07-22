@@ -7,3 +7,4 @@ requests==2.31.0
 
 # jeśli w main.py lub update_streamers.py czytasz .env
 python-dotenv==1.0.0
+kickapi
