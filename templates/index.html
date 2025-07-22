@@ -10,8 +10,11 @@
     <header>
       <h1>Panel Twitch Clips</h1>
       <div class="actions">
-        <button id="btn-update" class="btn">Odśwież streamerów</button>
-        <button id="btn-report" class="btn">Generuj raport</button>
+        <button id="btn-update" class="btn">Odśwież streamerów twitch</button>
+        <button id="btn-report" class="btn">Generuj raport Twitch</button>
+        <button id="btn-kick" class="btn">Generuj raport Kick</button>
+        <div id="kick-report-container"></div>
+
       </div>
       <div id="status" class="status"></div>
     </header>
@@ -22,6 +25,28 @@
   <script>
     const statusEl = document.getElementById('status');
     const raportContainer = document.getElementById('raport-container');
+
+    document.getElementById('btn-kick').onclick = () => {
+      fetch('/api/generate-raport-kick')
+        .then(() => pollKick());
+    };
+
+    function pollKick() {
+      fetch('/api/report-kick-ready')
+        .then(r => r.json())
+        .then(j => {
+          if (j.ready) {
+            fetch('/raport-kick-fragment')
+              .then(r => r.text())
+              .then(html => {
+              document.getElementById('kick-report-container').innerHTML = html;
+            });
+        } else {
+        setTimeout(pollKick, 2000);
+      }
+    });
+}
+
 
     // 1) Odśwież streamerów
     async function runUpdate() {

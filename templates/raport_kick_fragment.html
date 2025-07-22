@@ -1,0 +1,51 @@
+{# templates/raport_kick_fragment.html #}
+<!-- Panel statystyk -->
+<div id="stats-panel" class="stats-panel">
+  <p>Łącznie klipów: <strong><span id="stats-total">{{ stats.total_clips }}</span></strong></p>
+  <p>Top 3 streamerzy: <strong><span id="stats-streamers">
+    {% for st, cnt in stats.top_streamers %}
+      {{ st }} ({{ cnt }}){% if not loop.last %}, {% endif %}
+    {% endfor %}
+  </span></strong></p>
+</div>
+
+<div class="filter-panel">
+  <div class="dropdown" id="dd-streamers">
+    <button type="button">Streamerzy ▼</button>
+    <div class="dropdown-list">
+      {% set streamers = clips | map(attribute='broadcaster') | unique | sort %}
+      {% for s in streamers %}
+        <label>
+          <input type="checkbox" class="filter-streamer" value="{{ s }}" checked>
+          {{ s }}
+        </label>
+      {% endfor %}
+      <button class="btn-apply" id="apply-streamers">Zastosuj</button>
+    </div>
+  </div>
+</div>
+
+<table id="report-table">
+  <thead>
+    <tr>
+      <th>Streamer</th>
+      <th>Tytuł</th>
+      <th>Wyświetlenia</th>
+      <th>Czas</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for c in clips %}
+    <tr data-streamer="{{ c.broadcaster }}">
+      <td>{{ c.broadcaster }}</td>
+      <td>
+        <a href="{{ c.url }}" target="_blank" title="{{ c.title }}">
+          {{ c.title }}
+        </a>
+      </td>
+      <td>{{ c.views }}</td>
+      <td>{{ c.relative_time }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
