@@ -31,22 +31,25 @@
         .then(() => pollKick());
     };
 
-    function pollKick() {
-      fetch('/api/report-kick-ready')
-        .then(r => r.json())
-        .then(j => {
-          if (j.ready) {
-            fetch('/raport-kick-fragment')
-              .then(r => r.text())
-              .then(html => {
-              document.getElementById('kick-report-container').innerHTML = html;
-            });
-        } else {
+function pollKick() {
+  fetch('/api/report-kick-ready')
+    .then(r => r.json())
+    .then(j => {
+      if (j.ready) {
+        fetch('/raport-kick-fragment')
+          .then(r => r.text())
+          .then(html => {
+            // 1) wstrzyknięcie HTML-a
+            const kc = document.getElementById('kick-report-container');
+            kc.innerHTML = html;
+            // 2) inicjalizacja filtrów/statystyk TYLKO w kontenerze Kicka
+            initReportFiltersAndStats(kc);
+          });
+      } else {
         setTimeout(pollKick, 2000);
       }
     });
 }
-
 
     // 1) Odśwież streamerów
     async function runUpdate() {
@@ -80,74 +83,73 @@
     async function loadReportFragment() {
       const html = await fetch('/raport-fragment').then(r => r.text());
       raportContainer.innerHTML = html;
-      initReportFiltersAndStats();  // <-- nowa funkcja
+      initReportFiltersAndStats(raportContainer);  // <-- nowa funkcja
     }
 
     // 4) Inicjalizacja dropdownów i aplikacja filtrów
-function initReportFiltersAndStats() {
-  // 1. Toggle dropdownów
-  document.querySelectorAll('.dropdown').forEach(dd => {
+function initReportFiltersAndStats(root) {
+  // 1. Toggle dropdownów tylko wewnątrz root
+  root.querySelectorAll('.dropdown').forEach(dd => {
     dd.querySelector('button').addEventListener('click', () => {
       dd.classList.toggle('open');
     });
   });
 
-  // 2. Pobierz wszystkie wiersze tabeli
-  const rows = Array.from(document.querySelectorAll('#report-table tbody tr'));
+  // 2. Pobierz wszystkie wiersze tabeli wewnątrz root
+  const rows = Array.from(root.querySelectorAll('#report-table tbody tr'));
 
-  // 3. Funkcja robiąca filtr + live statystyki
+  // 3. Funkcja filtrująca + aktualizująca statystyki
   function applyFiltersAndStats() {
-    // a) co ignorujemy?
+    // a) streamerzy
     const ignoredStreamers = new Set(
-      Array.from(document.querySelectorAll('.filter-streamer'))
+      Array.from(root.querySelectorAll('.filter-streamer'))
         .filter(cb => !cb.checked).map(cb => cb.value)
     );
+    // b) kategorie
     const ignoredCategories = new Set(
-      Array.from(document.querySelectorAll('.filter-category'))
+      Array.from(root.querySelectorAll('.filter-category'))
         .filter(cb => !cb.checked).map(cb => cb.value)
     );
 
-    // b) filtrujemy i zbieramy widoczne wiersze
-    const visibleRows = [];
+    const visible = [];
     rows.forEach(row => {
       const st = row.dataset.streamer, ct = row.dataset.category;
-      const hidden = ignoredStreamers.has(st) || ignoredCategories.has(ct);
-      row.style.display = hidden ? 'none' : '';
-      if (!hidden) visibleRows.push(row);
+      const hide = ignoredStreamers.has(st) || ignoredCategories.has(ct);
+      row.style.display = hide ? 'none' : '';
+      if (!hide) visible.push(row);
     });
 
-    // c) obliczamy statystyki na podstawie visibleRows
-    const total = visibleRows.length;
-    const catCounts = {};
-    const strCounts = {};
-    visibleRows.forEach(r => {
-      catCounts[r.dataset.category] = (catCounts[r.dataset.category] || 0) + 1;
-      strCounts[r.dataset.streamer] = (strCounts[r.dataset.streamer] || 0) + 1;
+    // c) oblicz stats
+    const total = visible.length;
+    const catCounts = {}, strCounts = {};
+    visible.forEach(r => {
+      catCounts[r.dataset.category] = (catCounts[r.dataset.category]||0)+1;
+      strCounts[r.dataset.streamer]  = (strCounts[r.dataset.streamer]||0)+1;
     });
     const topCats = Object.entries(catCounts)
-      .sort((a,b) => b[1] - a[1]).slice(0,3);
+      .sort((a,b)=>b[1]-a[1]).slice(0,3);
     const topStr = Object.entries(strCounts)
-      .sort((a,b) => b[1] - a[1]).slice(0,3);
+      .sort((a,b)=>b[1]-a[1]).slice(0,3);
 
-    // d) wstawiamy do DOM
-    document.getElementById('stats-total').textContent = total;
-    document.getElementById('stats-categories').textContent =
-      topCats.map(([c,n]) => `${c} (${n})`).join(', ');
-    document.getElementById('stats-streamers').textContent =
-      topStr.map(([s,n]) => `${s} (${n})`).join(', ');
+    // d) wstaw do root, nie do document
+    root.querySelector('#stats-total').textContent = total;
+    root.querySelector('#stats-categories').textContent =
+      topCats.map(([c,n])=>`${c} (${n})`).join(', ');
+    root.querySelector('#stats-streamers').textContent =
+      topStr.map(([s,n])=>`${s} (${n})`).join(', ');
   }
 
-  // 4. Podłączamy przyciski „Zastosuj”
-  document.getElementById('apply-streamers').addEventListener('click', () => {
+  // 4. Podłącz przyciski tylko wewnątrz root
+  root.querySelector('#apply-streamers').addEventListener('click', ()=>{
     applyFiltersAndStats();
-    document.getElementById('dd-streamers').classList.remove('open');
+    root.querySelector('#dd-streamers').classList.remove('open');
   });
-  document.getElementById('apply-categories').addEventListener('click', () => {
+  root.querySelector('#apply-categories').addEventListener('click', ()=>{
     applyFiltersAndStats();
-    document.getElementById('dd-categories').classList.remove('open');
+    root.querySelector('#dd-categories').classList.remove('open');
   });
 
-  // 5. Pierwsze uruchomienie (wewnątrz init)
+  // 5. Pierwsze wyliczenie
   applyFiltersAndStats();
 }
 
