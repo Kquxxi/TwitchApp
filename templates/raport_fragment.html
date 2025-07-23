@@ -60,7 +60,8 @@
       <td>{{ c.broadcaster }}</td>
       <td>
         <a href="{{ c.url }}" target="_blank" title="{{ c.title }}">
-          {{ c.title }}
+          {%- set t = c.title -%}
+          {{ t[:40] }}{{ '…' if t|length > 40 else '' }}
         </a>
       </td>
       <td>{{ c.views }}</td>
