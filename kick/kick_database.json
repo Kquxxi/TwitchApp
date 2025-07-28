@@ -5,14 +5,22 @@
     { "slug": "azdus",       "display_name": "azdus" },
     { "slug": "pajalock",  "display_name": "pajalock" },
     { "slug": "niter",  "display_name": "niter" },
-    { "slug": "grendy",  "display_name": "grendy" },
     { "slug": "kubon",  "display_name": "kubon" },
-    { "slug": "vooltbanicja",  "display_name": "vooltbanicja" },
     { "slug": "demonzz1",  "display_name": "demonzz1" },
-    { "slug": "topasut",  "display_name": "topasut" },
     { "slug": "tubson",  "display_name": "tubson" },
     { "slug": "kasix",  "display_name": "kasix" },
     { "slug": "wardega",  "display_name": "wardega" },
-    { "slug": "navcia",  "display_name": "navcia" }
+    { "slug": "navcia",  "display_name": "navcia" },
+    { "slug": "Vysotzky",  "display_name": "Vysotzky" },
+    { "slug": "NEEXcsgo",  "display_name": "NEEXcsgo" },
+    { "slug": "BanduraCartel",  "display_name": "BanduraCartel" },
+    { "slug": "AwizoTV",  "display_name": "AwizoTV" },
+    { "slug": "Dobrodziej",  "display_name": "Dobrodziej" },
+    { "slug": "xntentacion",  "display_name": "xntentacion" },
+    { "slug": "RybsonLoL",  "display_name": "RybsonLoL" },
+    { "slug": "MBagietson",  "display_name": "MBagietson" },
+    { "slug": "ZONY",  "display_name": "ZONY" },
+    { "slug": "RandomBruceTV",  "display_name": "RandomBruceTV" },
+    { "slug": "Ali5cali",  "display_name": "Ali5cali" }
   ]
 }
