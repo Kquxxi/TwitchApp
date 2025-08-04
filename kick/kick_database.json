@@ -1,6 +1,7 @@
 {
   "database": [
     { "slug": "mokrysuchar", "display_name": "mokrysuchar" },
+    { "slug": "RandomBruceTV",  "display_name": "RandomBruceTV" },
     { "slug": "japczan",  "display_name": "japczan" },
     { "slug": "azdus",       "display_name": "azdus" },
     { "slug": "pajalock",  "display_name": "pajalock" },
@@ -20,7 +21,6 @@
     { "slug": "RybsonLoL",  "display_name": "RybsonLoL" },
     { "slug": "MBagietson",  "display_name": "MBagietson" },
     { "slug": "ZONY",  "display_name": "ZONY" },
-    { "slug": "RandomBruceTV",  "display_name": "RandomBruceTV" },
     { "slug": "MORK",  "display_name": "MORK" },
     { "slug": "ArQuel",  "display_name": "ArQuel" },
     { "slug": "olsza",  "display_name": "olsza" },
