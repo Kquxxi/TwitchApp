@@ -5,9 +5,11 @@ on:
     - cron: '*/30 * * * *' # co 30 minut
   workflow_dispatch:
 
+permissions:
+  contents: write
+  
 jobs:
-  permissions:
-    contents: write
+
   collect:
     runs-on: ubuntu-latest
     steps:
