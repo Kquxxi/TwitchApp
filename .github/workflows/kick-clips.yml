@@ -25,8 +25,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Kick fetcher
-        run: python kick/generate_raport_kick.py
-
+        run: python kick/scrape_kick_clips.py
       - name: Commit & push updated cache
         run: |
           git config --global user.email "github-actions@github.com"
