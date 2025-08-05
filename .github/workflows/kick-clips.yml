@@ -6,6 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
+  permissions:
+    contents: write
   collect:
     runs-on: ubuntu-latest
     steps:
@@ -29,4 +31,5 @@ jobs:
           git config --global user.name "GitHub Actions"
           git add kick/kick_clips_cache.json
           git commit -m "Auto-update: kick clips cache" || echo "Nothing to commit"
-          git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/Kquxxi/TwitchApp.git HEAD:main
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Kquxxi/TwitchApp.git HEAD:main
+
