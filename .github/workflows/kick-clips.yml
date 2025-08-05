@@ -1,14 +1,13 @@
-name: Run Kick fetcher
-run: python kick/generate_raport_kick.py
+name: Kick fetcher
+
 on:
   schedule:
-    - cron: '*/30 * * * *'   # Odpala co 30 minut
+    - cron: '*/30 * * * *' # co 30 minut
   workflow_dispatch:
 
 jobs:
   collect:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -22,12 +21,12 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Kick fetcher
-        run: python path/do/kick_fetcher.py
+        run: python kick/generate_raport_kick.py
 
       - name: Commit & push updated cache
         run: |
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
-          git add path/do/kick_clips_cache.json
+          git add kick/kick_clips_cache.json
           git commit -m "Auto-update: kick clips cache" || echo "Nothing to commit"
           git push
