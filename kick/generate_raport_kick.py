@@ -50,4 +50,4 @@ html = tpl.render(clips=filtered, stats=stats)
 with open(os.path.join(base, 'raport_kick.html'), 'w', encoding='utf-8') as f:
     f.write(html)
 
-print("Kick‑raport wygenerowany: kick/raport_kick.html")
+print("Kick raport wygenerowany: kick/raport_kick.html")
