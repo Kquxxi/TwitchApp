@@ -2,7 +2,7 @@ name: Kick fetcher
 
 on:
   schedule:
-    - cron: '*/20 * * * *' # co 20 minut
+    - cron: '*/5 * * * *' # co 5 minut
   workflow_dispatch:
 
 permissions:
