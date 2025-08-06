@@ -2,14 +2,13 @@ name: Kick fetcher
 
 on:
   schedule:
-    - cron: '*/5 * * * *' # co 5 minut
+    - cron: '*/20 * * * *' # co 5 minut
   workflow_dispatch:
 
 permissions:
   contents: write
   
 jobs:
-
   collect:
     runs-on: ubuntu-latest
     steps:
