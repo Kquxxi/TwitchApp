@@ -1,21 +1,24 @@
-name: Kick fetcher
-
 on:
   schedule:
-    - cron: '*/30 * * * *'   # co 30 minut
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: kick-cache-update
+  cancel-in-progress: false
+
 jobs:
   collect:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout kick-cache branch
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0          # potrzebne do przełączania branchy
+          ref: kick-cache
+          fetch-depth: 0
           persist-credentials: true
 
       - name: Set up Python
@@ -23,24 +26,41 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install deps
         run: pip install -r requirements.txt
 
-      - name: Run Kick fetcher
+      - name: Run Kick fetcher (generates cache)
         run: python kick/scrape_kick_clips.py
 
-      # >>> najważniejsza zmiana: osobna gałąź + force-push <<<
-      - name: Commit & push updated cache (force to kick-cache)
+      - name: Commit ONLY cache (amend only if last is bot)
+        shell: bash
         run: |
+          set -euo pipefail
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
 
-          # przełącz na/utwórz gałąź kick-cache
-          git fetch --all --prune
-          git checkout -B kick-cache
+          # Zawsze startuj od najnowszego zdalnego stanu
+          git fetch origin
+          git rebase origin/kick-cache || true
 
-          git add kick/kick_clips_cache.json
-          git commit -m "update kick cache" || echo "No changes"
+          # Nie dotykaj database
+          git restore --staged --worktree --source HEAD -- kick/kick_database.json || true
 
-          # nadpisz historię tej gałęzi jednym commitem
-          git push -f origin HEAD:kick-cache
+          # Stage tylko cache
+          git add --force kick/kick_clips_cache.json
+
+          # Nic się nie zmieniło? Kończymy
+          git diff --cached --quiet && exit 0
+
+          # Sprawdź autora ostatniego commita na zdalnym tipie
+          LAST_AUTHOR="$(git log -1 --pretty=%an origin/kick-cache || echo "")"
+
+          if [ "$LAST_AUTHOR" = "GitHub Actions" ]; then
+            # Ostatni commit to bot → AMEND i force-with-lease (bezpieczne)
+            git commit --amend --no-edit
+            git push --force-with-lease origin HEAD:kick-cache
+          else
+            # Na czubku są Twoje commity → zwykły commit, bez force
+            git commit -m "update kick cache"
+            git push origin HEAD:kick-cache
+          fi
