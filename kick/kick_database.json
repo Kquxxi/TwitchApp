@@ -24,6 +24,41 @@
     { "slug": "MORK",  "display_name": "MORK" },
     { "slug": "ArQuel",  "display_name": "ArQuel" },
     { "slug": "olsza",  "display_name": "olsza" },
+<<<<<<< HEAD
     { "slug": "Lewus",  "display_name": "Lewus" }
+=======
+    { "slug": "Lewus",  "display_name": "Lewus" },
+    { "slug": "xmerghani",  "display_name": "xmerghani" },
+    { "slug": "remsua",  "display_name": "remsua" },
+    { "slug": "Kaseko",  "display_name": "Kaseko" },
+    { "slug": "meduska",  "display_name": "meduska" },
+    { "slug": "WRONEK",  "display_name": "WRONEK" },
+    { "slug": "AHAPULCO",  "display_name": "AHAPULCO" },
+    { "slug": "Chef_jan",  "display_name": "Chef_jan" },
+    { "slug": "MaiLinhh",  "display_name": "MaiLinhh" },
+    { "slug": "holak1337",  "display_name": "holak1337" },
+    { "slug": "Bladii",  "display_name": "Bladii" },
+    { "slug": "KapitanAlien",  "display_name": "KapitanAlien" },
+    { "slug": "Hiszpanitos",  "display_name": "Hiszpanitos" },
+    { "slug": "slodkapinki",  "display_name": "slodkapinki" },
+    { "slug": "STOMPcsgo",  "display_name": "STOMPcsgo" },
+    { "slug": "diabeuu",  "display_name": "diabeuu" },
+    { "slug": "revo",  "display_name": "revo" },
+    { "slug": "Tuszol",  "display_name": "Tuszol" },
+    { "slug": "cinkrofwest",  "display_name": "cinkrofwest" },
+    { "slug": "Nieuczesana",  "display_name": "Nieuczesana" },
+    { "slug": "Chef_jan",  "display_name": "Chef_jan" },
+    { "slug": "delordione",  "display_name": "delordione" },
+    { "slug": "srokaaa",  "display_name": "srokaaa" },
+    { "slug": "Diables",  "display_name": "Diables" },
+    { "slug": "adrian1g",  "display_name": "adrian1g" },
+    { "slug": "patiro",  "display_name": "patiro" },
+    { "slug": "xToM223",  "display_name": "xToM223" },
+    { "slug": "amar8ygg",  "display_name": "amar8ygg" },
+    { "slug": "pyka97",  "display_name": "pyka97" },
+    { "slug": "IgorGrabowski",  "display_name": "KaseIgorGrabowskiko" },
+    { "slug": "AHAPULCO",  "display_name": "AHAPULCO" }
+
+>>>>>>> dce10b1 (Database update)
   ]
 }
