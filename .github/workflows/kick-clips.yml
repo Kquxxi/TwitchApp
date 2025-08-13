@@ -1,6 +1,6 @@
 on:
   schedule:
-    - cron: '*/30 * * * *'   # co 30 minut
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -32,31 +32,35 @@ jobs:
       - name: Run Kick fetcher (generates cache)
         run: python kick/scrape_kick_clips.py
 
-      - name: Commit ONLY cache (amend last commit, keep database)
+      - name: Commit ONLY cache (amend only if last is bot)
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
 
-          # Upewnij się, że database nie wejdzie do commita
-          git restore --staged --worktree --source HEAD -- kick/kick_database.json || true
-
-          # Dodaj tylko cache
-          git add --force kick/kick_clips_cache.json
-
-          # Jeśli cache się nie zmienił — koniec (zero commitów)
-          git diff --cached --quiet && exit 0
-
-          # Zsynchronizuj się z remote, żeby nie przepisać cudzych commitów
-          git fetch origin kick-cache
+          # Zawsze startuj od najnowszego zdalnego stanu
+          git fetch origin
           git rebase origin/kick-cache || true
 
-          # Nadpisz ostatni commit (zamiast dodawać nowy)
-          if git rev-parse --verify HEAD >/dev/null 2>&1; then
-            git commit --amend --no-edit
-          else
-            git commit -m "update kick cache"
-          fi
+          # Nie dotykaj database
+          git restore --staged --worktree --source HEAD -- kick/kick_database.json || true
 
-          # Bezpieczny push z nadpisaniem TYLKO bieżącego commita cache
-          git push --force-with-lease origin HEAD:kick-cache
+          # Stage tylko cache
+          git add --force kick/kick_clips_cache.json
+
+          # Nic się nie zmieniło? Kończymy
+          git diff --cached --quiet && exit 0
+
+          # Sprawdź autora ostatniego commita na zdalnym tipie
+          LAST_AUTHOR="$(git log -1 --pretty=%an origin/kick-cache || echo "")"
+
+          if [ "$LAST_AUTHOR" = "GitHub Actions" ]; then
+            # Ostatni commit to bot → AMEND i force-with-lease (bezpieczne)
+            git commit --amend --no-edit
+            git push --force-with-lease origin HEAD:kick-cache
+          else
+            # Na czubku są Twoje commity → zwykły commit, bez force
+            git commit -m "update kick cache"
+            git push origin HEAD:kick-cache
+          fi
