@@ -1,5 +1,3 @@
-name: Kick fetcher
-
 on:
   schedule:
     - cron: '*/30 * * * *'   # co 30 minut
@@ -8,14 +6,19 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: kick-cache-update
+  cancel-in-progress: false
+
 jobs:
   collect:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout kick-cache branch
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0          # potrzebne do przełączania branchy
+          ref: kick-cache
+          fetch-depth: 0
           persist-credentials: true
 
       - name: Set up Python
@@ -23,24 +26,37 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install deps
         run: pip install -r requirements.txt
 
-      - name: Run Kick fetcher
+      - name: Run Kick fetcher (generates cache)
         run: python kick/scrape_kick_clips.py
 
-      # >>> najważniejsza zmiana: osobna gałąź + force-push <<<
-      - name: Commit & push updated cache (force to kick-cache)
+      - name: Commit ONLY cache (amend last commit, keep database)
         run: |
+          set -e
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
 
-          # przełącz na/utwórz gałąź kick-cache
-          git fetch --all --prune
-          git checkout -B kick-cache
+          # Upewnij się, że database nie wejdzie do commita
+          git restore --staged --worktree --source HEAD -- kick/kick_database.json || true
 
-          git add kick/kick_clips_cache.json
-          git commit -m "update kick cache" || echo "No changes"
+          # Dodaj tylko cache
+          git add --force kick/kick_clips_cache.json
 
-          # nadpisz historię tej gałęzi jednym commitem
-          git push -f origin HEAD:kick-cache
+          # Jeśli cache się nie zmienił — koniec (zero commitów)
+          git diff --cached --quiet && exit 0
+
+          # Zsynchronizuj się z remote, żeby nie przepisać cudzych commitów
+          git fetch origin kick-cache
+          git rebase origin/kick-cache || true
+
+          # Nadpisz ostatni commit (zamiast dodawać nowy)
+          if git rev-parse --verify HEAD >/dev/null 2>&1; then
+            git commit --amend --no-edit
+          else
+            git commit -m "update kick cache"
+          fi
+
+          # Bezpieczny push z nadpisaniem TYLKO bieżącego commita cache
+          git push --force-with-lease origin HEAD:kick-cache
