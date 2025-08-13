@@ -24,9 +24,7 @@
     { "slug": "MORK",  "display_name": "MORK" },
     { "slug": "ArQuel",  "display_name": "ArQuel" },
     { "slug": "olsza",  "display_name": "olsza" },
-<<<<<<< HEAD
-    { "slug": "Lewus",  "display_name": "Lewus" }
-=======
+    { "slug": "Lewus",  "display_name": "Lewus" },
     { "slug": "Lewus",  "display_name": "Lewus" },
     { "slug": "xmerghani",  "display_name": "xmerghani" },
     { "slug": "remsua",  "display_name": "remsua" },
@@ -58,7 +56,5 @@
     { "slug": "pyka97",  "display_name": "pyka97" },
     { "slug": "IgorGrabowski",  "display_name": "KaseIgorGrabowskiko" },
     { "slug": "AHAPULCO",  "display_name": "AHAPULCO" }
-
->>>>>>> dce10b1 (Database update)
   ]
 }
